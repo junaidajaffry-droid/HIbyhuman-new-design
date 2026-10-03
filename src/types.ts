@@ -115,6 +115,9 @@ export interface ClientTestimonial {
   content: string;
   rating: number;
   verified: boolean;
+  serviceCategory?: string;
+  metric?: string;
+  avatarGradient?: string;
 }
 
 export interface FaqItem {

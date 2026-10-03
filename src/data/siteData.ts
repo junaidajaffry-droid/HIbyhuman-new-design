@@ -1314,39 +1314,51 @@ export const processMilestones: ProcessStep[] = [
 export const clientTestimonials: ClientTestimonial[] = [
   {
     name: "Sarah Jenkins",
-    role: "Marketing Manager",
+    role: "Marketing Director",
     company: "Enterprise Retail UK",
     content:
       "HiByHuman delivered our multi-brand e-commerce platform ahead of schedule. The site loads in under a second and our conversion rate jumped by 42% in the first quarter alone.",
     rating: 5,
     verified: true,
+    serviceCategory: "E-Commerce & Performance Web",
+    metric: "+42% Conversion Rate Jump",
+    avatarGradient: "from-cyan-500 to-blue-600",
   },
   {
     name: "Jack Montgomery",
-    role: "Chief Imagineer",
+    role: "Founder & Chief Imagineer",
     company: "Creative Horizons",
     content:
       "The sheer craft and visual precision of the HiByHuman team is unmatched. From our 3D animated identity to the high-stakes investor deck that helped us raise £3.5M, they have been phenomenal.",
     rating: 5,
     verified: true,
+    serviceCategory: "Investor Pitch Deck & Motion",
+    metric: "£3.5M Seed Round Closed",
+    avatarGradient: "from-purple-500 to-pink-600",
   },
   {
     name: "David Vance",
     role: "Head of Growth",
     company: "Fintech Solutions Group",
     content:
-      "Working with HiByHuman felt like having a tier-one digital agency in-house. Zero template fluff—just clean code, modern UX, and real commercial results that scaled seamlessly.",
+      "Working with HiByHuman felt like having a tier-one digital agency in-house. Zero template fluff—just clean code, modern UX, and real commercial results that scaled seamlessly across all channels.",
     rating: 5,
     verified: true,
+    serviceCategory: "Digital Marketing & CRO",
+    metric: "3.8x Blended ROAS Achieved",
+    avatarGradient: "from-emerald-500 to-teal-600",
   },
   {
     name: "Jessica Sherlock",
     role: "Managing Director",
     company: "Oitaka Luxury Group",
     content:
-      "Their 100% money-back guarantee gave us confidence, but their first design presentation blew everyone in the boardroom away. Our luxury packaging line has received international accolades.",
+      "Their 100% money-back guarantee gave us initial confidence, but their first design presentation blew everyone in the boardroom away. Our luxury packaging line has received international accolades.",
     rating: 5,
     verified: true,
+    serviceCategory: "Luxury Brand Identity & Packaging",
+    metric: "European Design Honors Award",
+    avatarGradient: "from-amber-500 to-rose-600",
   },
   {
     name: "Adam Smith",
@@ -1356,6 +1368,21 @@ export const clientTestimonials: ClientTestimonial[] = [
       "The clarity of their delivery milestones and the transparent fixed pricing meant zero surprises. The code ownership transfer was smooth and their UK project lead was available around the clock.",
     rating: 5,
     verified: true,
+    serviceCategory: "Full-Stack Web & Brand Systems",
+    metric: "100% IP & Source Code Transfer",
+    avatarGradient: "from-indigo-500 to-purple-600",
+  },
+  {
+    name: "Elena Rostova",
+    role: "Author & Executive Director",
+    company: "Meridian Publishing",
+    content:
+      "HiByHuman ghostwrote, formatted, and published my business memoir on Amazon KDP within 6 weeks. The interior typesetting and illustrated cover artwork was hailed by readers and literary critics.",
+    rating: 5,
+    verified: true,
+    serviceCategory: "Book Writing & Global Publishing",
+    metric: "Amazon #1 Bestseller Rank",
+    avatarGradient: "from-rose-500 to-orange-600",
   },
 ];
 

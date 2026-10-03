@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "motion/react";
+import React, { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "motion/react";
 import { HiByHumanLogo, HiByHumanMark } from "./HiByHumanLogo";
 import {
   ArrowRight,
@@ -10,9 +10,9 @@ import {
   Tag,
   Check,
   Award,
-  Users,
-  Briefcase,
   ChevronDown,
+  Star,
+  Layers,
 } from "lucide-react";
 
 interface HeroSectionProps {
@@ -22,7 +22,30 @@ interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenFittingModal,
 }) => {
-  const [copiedCode, setCopiedCode] = React.useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
+
+  // Parallax scroll tracking for Hero
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 85,
+    damping: 24,
+    restDelta: 0.001,
+  });
+
+  // Layered vertical parallax translations
+  const yAtmosphere = useTransform(smoothProgress, [0, 1], [0, 120]);
+  const yHeadline = useTransform(smoothProgress, [0, 1], [0, 50]);
+  const ySubtitle = useTransform(smoothProgress, [0, 1], [0, 35]);
+  const yCtas = useTransform(smoothProgress, [0, 1], [0, 25]);
+  const yGuarantees = useTransform(smoothProgress, [0, 1], [0, 15]);
+  const yFloatLeft = useTransform(smoothProgress, [0, 1], [0, -85]);
+  const yFloatRight = useTransform(smoothProgress, [0, 1], [0, 75]);
+  const heroOpacity = useTransform(smoothProgress, [0, 0.9], [1, 0.3]);
 
   const handleCopyCode = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,19 +56,65 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   return (
     <section
+      ref={sectionRef}
       id="hero"
-      className="relative w-full overflow-hidden text-neutral-900 min-h-[80vh] flex flex-col justify-center border-b border-neutral-200/50"
+      className="relative w-full overflow-hidden text-neutral-900 min-h-[85vh] flex flex-col justify-center border-b border-neutral-200/50"
     >
-      {/* Dynamic atmospheric accents */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-32 left-1/4 w-[650px] h-[650px] bg-cyan-400/20 rounded-full blur-[160px] pointer-events-none" />
-        <div className="absolute top-1/3 -right-24 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute -bottom-20 left-10 w-[450px] h-[450px] bg-amber-400/15 rounded-full blur-[140px] pointer-events-none" />
+      {/* Dynamic atmospheric accents with Scroll Parallax */}
+      <motion.div
+        style={{ y: yAtmosphere }}
+        className="absolute inset-0 pointer-events-none overflow-hidden -z-10"
+      >
+        <div className="absolute -top-32 left-1/4 w-[680px] h-[680px] bg-cyan-400/22 rounded-full blur-[160px] pointer-events-none animate-float-orb1" />
+        <div className="absolute top-1/3 -right-24 w-[540px] h-[540px] bg-purple-500/18 rounded-full blur-[150px] pointer-events-none animate-float-orb2" />
+        <div className="absolute -bottom-20 left-10 w-[480px] h-[480px] bg-amber-400/16 rounded-full blur-[140px] pointer-events-none animate-float-orb3" />
         <div className="absolute inset-0 opacity-[0.035] bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:24px_24px]" />
-      </div>
+      </motion.div>
 
-      {/* Main Container */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 pt-12 sm:pt-16 pb-16 sm:pb-20 flex flex-col items-center text-center">
+      {/* Floating Interactive Parallax Flank Chips (Desktop) */}
+      <motion.div
+        style={{ y: yFloatLeft }}
+        className="hidden xl:flex absolute top-32 left-8 z-20 flex-col gap-2 p-3.5 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-lg backdrop-blur-md max-w-[210px] pointer-events-auto hover:scale-105 transition-transform"
+      >
+        <div className="flex items-center gap-2 text-rose-600 font-bold text-xs font-mono">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>FIRST50 ACTIVE</span>
+        </div>
+        <div className="text-xs text-neutral-800 font-semibold leading-tight">
+          50% Discount applied to your initial development or design sprint.
+        </div>
+        <div className="text-[10px] font-mono text-neutral-500 pt-1 border-t border-neutral-100 flex items-center justify-between">
+          <span>Speed: 24h Kickoff</span>
+          <span className="text-emerald-600 font-bold">✓ W3C Code</span>
+        </div>
+      </motion.div>
+
+      <motion.div
+        style={{ y: yFloatRight }}
+        className="hidden xl:flex absolute top-40 right-8 z-20 flex-col gap-2 p-3.5 rounded-2xl bg-neutral-950 text-white border border-neutral-800 shadow-xl backdrop-blur-md max-w-[220px] pointer-events-auto hover:scale-105 transition-transform"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 text-amber-400">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-3 h-3 fill-amber-400" />
+            ))}
+          </div>
+          <span className="text-[10px] font-mono text-cyan-400">99.4% CSAT</span>
+        </div>
+        <div className="text-xs text-neutral-200 font-medium leading-snug">
+          "Zero fluff, sub-second speeds, and 100% full source code ownership."
+        </div>
+        <div className="text-[10px] font-mono text-neutral-400 pt-1 border-t border-neutral-800 flex items-center justify-between">
+          <span>10k+ Delivered</span>
+          <span className="text-cyan-400">London & Global</span>
+        </div>
+      </motion.div>
+
+      {/* Main Container with Directional Parallax Soft Fade */}
+      <motion.div
+        style={{ opacity: heroOpacity }}
+        className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 pt-12 sm:pt-16 pb-16 sm:pb-20 flex flex-col items-center text-center"
+      >
         {/* Top Badges Bar */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -98,6 +167,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <Check className="w-3 h-3 text-emerald-600" />
               ) : null}
             </button>
+
             <button
               type="button"
               onClick={() =>
@@ -111,8 +181,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </motion.div>
 
-        {/* Main Headline */}
+        {/* Main Headline with Parallax Y offset */}
         <motion.h1
+          style={{ y: yHeadline }}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
@@ -125,8 +196,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </span>
         </motion.h1>
 
-        {/* Subtitle */}
+        {/* Subtitle with Parallax Y offset */}
         <motion.p
+          style={{ y: ySubtitle }}
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
@@ -135,8 +207,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           We build high-converting digital products, intelligent interactive platforms, and scalable web applications for ambitious teams. Transparent fixed pricing, guaranteed velocity, and end-to-end craft.
         </motion.p>
 
-        {/* Primary CTAs */}
+        {/* Primary CTAs with Parallax Y offset */}
         <motion.div
+          style={{ y: yCtas }}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.35 }}
@@ -171,14 +244,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </a>
         </motion.div>
 
-        {/* Key Guarantees Bar */}
+        {/* Key Guarantees Bar with Parallax offset */}
         <motion.div
+          style={{ y: yGuarantees }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.45 }}
           className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-3 text-left"
         >
-          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3">
+          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3 hover:border-neutral-300 transition-colors">
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/60">
               <ShieldCheck className="w-5 h-5" />
             </div>
@@ -190,7 +264,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3">
+          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3 hover:border-neutral-300 transition-colors">
             <div className="p-2 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-200/60">
               <Clock className="w-5 h-5" />
             </div>
@@ -202,7 +276,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3">
+          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3 hover:border-neutral-300 transition-colors">
             <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60">
               <Zap className="w-5 h-5" />
             </div>
@@ -214,7 +288,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3">
+          <div className="p-4 rounded-2xl bg-white/80 border border-neutral-200/80 shadow-xs backdrop-blur-sm flex items-center gap-3 hover:border-neutral-300 transition-colors">
             <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-200/60">
               <Award className="w-5 h-5" />
             </div>
@@ -226,7 +300,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 };

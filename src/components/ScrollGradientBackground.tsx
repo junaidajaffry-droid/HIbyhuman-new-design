@@ -1,110 +1,216 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "motion/react";
 
 export const ScrollGradientBackground: React.FC = () => {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [scrollDirection, setScrollDirection] = useState<"down" | "up">("down");
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [scrollDir, setScrollDir] = useState<"down" | "up">("down");
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // Framer Motion scroll hooks
+  const { scrollY, scrollYProgress } = useScroll();
+
+  // Smooth springs for buttery parallax translation
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 85,
+    damping: 24,
+    restDelta: 0.001,
+  });
+
+  // Parallax offsets for different background depths
+  const orb1ParallaxY = useTransform(smoothProgress, [0, 1], [-40, 240]);
+  const orb2ParallaxY = useTransform(smoothProgress, [0, 1], [30, -220]);
+  const orb3ParallaxY = useTransform(smoothProgress, [0, 1], [-20, 180]);
+  const gridParallaxY = useTransform(smoothProgress, [0, 1], [0, -120]);
+  const auroraAngle = useTransform(smoothProgress, [0, 1], [135, 315]);
+
+  // Track scroll direction and mouse position
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    let lastY = window.scrollY;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const progress = maxScroll > 0 ? Math.min(1, Math.max(0, currentScrollY / maxScroll)) : 0;
-
-      if (currentScrollY > lastScrollY) {
-        setScrollDirection("down");
-      } else if (currentScrollY < lastScrollY) {
-        setScrollDirection("up");
+      const currentY = window.scrollY;
+      if (currentY > lastY + 2) {
+        setScrollDir("down");
+      } else if (currentY < lastY - 2) {
+        setScrollDir("up");
       }
-      lastScrollY = currentScrollY;
+      lastY = currentY;
+    };
 
-      setScrollProgress(progress);
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
-  // Compute dynamic gradient color stops and angles based on scrollProgress (0 to 1)
-  // Rotating angle: starts at 135deg and rotates smoothly up to 315deg with scroll
-  const gradientAngle = 135 + scrollProgress * 180;
+  // Ambient floating particle canvas with scroll-reactive velocity
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-  // Key color stops dynamically shifting with scroll depth:
-  // 0.0 - 0.25 (Top): Ice Cyan (#e0f7fa) -> Soft Sky (#e0f2fe) -> Lavender (#f3e8ff)
-  // 0.25 - 0.50 (Mid-top): Violet (#ede9fe) -> Electric Indigo tint (#e0e7ff) -> Mint (#e6fffa)
-  // 0.50 - 0.75 (Mid-bottom): Cyber Teal (#ccfbf1) -> Amber tint (#fef3c7) -> Rose tint (#ffe4e6)
-  // 0.75 - 1.00 (Bottom): Deep Sapphire tint (#dbeafe) -> Aquamarine (#cffafe) -> Clean Ice (#f8fafc)
+    let animationFrameId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
-  // Floating mesh positions based on scroll
-  const orb1Y = 10 + scrollProgress * 55; // 10% to 65%
-  const orb1X = 15 + Math.sin(scrollProgress * Math.PI * 2) * 20; // gentle oscillation
-  const orb2Y = 60 - scrollProgress * 40; // 60% to 20%
-  const orb2X = 75 - Math.cos(scrollProgress * Math.PI * 2) * 15;
-  const orb3Y = 85 - scrollProgress * 30; // 85% to 55%
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
 
-  // Gradient hue shift for the ambient orbs
-  const hue1 = (190 + scrollProgress * 140) % 360; // 190 (cyan) -> 330 (rose/violet)
-  const hue2 = (260 + scrollProgress * 100) % 360; // 260 (purple) -> 360 (red/orange)
-  const hue3 = (160 + scrollProgress * 80) % 360; // 160 (emerald) -> 240 (blue)
+    // Generate lightweight floating stardust particles
+    const particleCount = Math.min(48, Math.floor(window.innerWidth / 30));
+    const particles = Array.from({ length: particleCount }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 2 + 0.8,
+      alpha: Math.random() * 0.45 + 0.15,
+      speedY: (Math.random() - 0.5) * 0.4,
+      speedX: (Math.random() - 0.5) * 0.3,
+      color:
+        Math.random() > 0.5
+          ? "rgba(0, 212, 255, " // cyan
+          : Math.random() > 0.5
+          ? "rgba(168, 85, 247, " // purple
+          : "rgba(16, 185, 129, ", // emerald
+    }));
+
+    let lastScrollVal = window.scrollY;
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      const currentScrollVal = window.scrollY;
+      const scrollDelta = (currentScrollVal - lastScrollVal) * 0.12;
+      lastScrollVal = currentScrollVal;
+
+      particles.forEach((p) => {
+        // Natural gentle drift + scroll parallax momentum
+        p.y += p.speedY - scrollDelta;
+        p.x += p.speedX;
+
+        // Wrap around canvas edges
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `${p.color}${p.alpha})`;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = p.color + "0.6)";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // Compute dynamic chromatic spectrum based on mouse & scroll
+  const mouseOffsetX = (mousePos.x - 0.5) * 35;
+  const mouseOffsetY = (mousePos.y - 0.5) * 35;
 
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 pointer-events-none -z-50 overflow-hidden transition-all duration-700 ease-out"
+      className="fixed inset-0 pointer-events-none -z-50 overflow-hidden select-none"
     >
-      {/* Dynamic Base Gradient Layer */}
-      <div
-        className="absolute inset-0 transition-all duration-500 ease-out"
+      {/* Dynamic Animated Base Aurora Gradient */}
+      <motion.div
+        className="absolute inset-0 animate-aurora opacity-95 transition-opacity duration-1000"
         style={{
-          background: `linear-gradient(${gradientAngle}deg, 
-            hsl(${hue1}, 85%, 97%) 0%, 
-            hsl(${hue2}, 70%, 96%) 35%, 
-            hsl(${hue3}, 75%, 95%) 70%, 
-            hsl(${(hue1 + 60) % 360}, 80%, 98%) 100%)`,
+          background: `linear-gradient(135deg, 
+            #fafcff 0%, 
+            #f0f8ff 25%, 
+            #f7f2ff 50%, 
+            #eefdfa 75%, 
+            #fcf8f6 100%)`,
         }}
       />
 
-      {/* Floating Ambient Mesh Orb 1 (Top / Left) */}
-      <div
-        className="absolute w-[680px] h-[680px] rounded-full blur-[140px] opacity-45 mix-blend-multiply transition-all duration-700 ease-out"
+      {/* Floating Animated Chromatic Mesh Orb 1: Electric Cyan (Top-Left) */}
+      <motion.div
+        className="absolute w-[720px] h-[720px] rounded-full blur-[140px] opacity-45 mix-blend-multiply animate-float-orb1"
         style={{
-          top: `${orb1Y}%`,
-          left: `${orb1X}%`,
-          transform: "translate(-50%, -50%)",
-          background: `radial-gradient(circle, hsl(${hue1}, 95%, 75%) 0%, transparent 70%)`,
+          top: "8%",
+          left: "12%",
+          x: mouseOffsetX * 1.2,
+          y: orb1ParallaxY,
+          background:
+            "radial-gradient(circle, rgba(0, 212, 255, 0.45) 0%, rgba(99, 102, 241, 0.25) 45%, transparent 70%)",
         }}
       />
 
-      {/* Floating Ambient Mesh Orb 2 (Right / Center) */}
-      <div
-        className="absolute w-[600px] h-[600px] rounded-full blur-[150px] opacity-40 mix-blend-multiply transition-all duration-700 ease-out"
+      {/* Floating Animated Chromatic Mesh Orb 2: Neon Purple / Fuchsia (Mid-Right) */}
+      <motion.div
+        className="absolute w-[680px] h-[680px] rounded-full blur-[150px] opacity-40 mix-blend-multiply animate-float-orb2"
         style={{
-          top: `${orb2Y}%`,
-          left: `${orb2X}%`,
-          transform: "translate(-50%, -50%)",
-          background: `radial-gradient(circle, hsl(${hue2}, 90%, 78%) 0%, transparent 70%)`,
+          top: "42%",
+          right: "8%",
+          x: -mouseOffsetX * 1.5,
+          y: orb2ParallaxY,
+          background:
+            "radial-gradient(circle, rgba(217, 70, 239, 0.42) 0%, rgba(168, 85, 247, 0.22) 50%, transparent 70%)",
         }}
       />
 
-      {/* Floating Ambient Mesh Orb 3 (Bottom Center) */}
-      <div
-        className="absolute w-[720px] h-[720px] rounded-full blur-[160px] opacity-35 mix-blend-multiply transition-all duration-700 ease-out"
+      {/* Floating Animated Chromatic Mesh Orb 3: Emerald & Amber Gold (Bottom-Left / Center) */}
+      <motion.div
+        className="absolute w-[750px] h-[750px] rounded-full blur-[160px] opacity-35 mix-blend-multiply animate-float-orb3"
         style={{
-          top: `${orb3Y}%`,
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          background: `radial-gradient(circle, hsl(${hue3}, 90%, 76%) 0%, transparent 70%)`,
+          bottom: "10%",
+          left: "28%",
+          x: mouseOffsetX * 0.8,
+          y: orb3ParallaxY,
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(245, 158, 11, 0.2) 55%, transparent 70%)",
         }}
       />
 
-      {/* Subtle fine matrix overlay for depth */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:24px_24px]" />
+      {/* Interactive Stardust Particle Field (Responds to Scroll Velocity & Direction) */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full opacity-60 pointer-events-none"
+      />
+
+      {/* Parallax Fine Micro-Dot Digital Matrix Overlay */}
+      <motion.div
+        className="absolute inset-0 opacity-[0.032] pointer-events-none"
+        style={{
+          y: gridParallaxY,
+          backgroundImage: "radial-gradient(#000000 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+
+      {/* Subtle Scroll Direction Flare Accent at Viewport Rim */}
+      <div
+        className={`absolute inset-x-0 h-1 transition-opacity duration-700 pointer-events-none ${
+          scrollDir === "down" ? "top-0 opacity-20" : "bottom-0 opacity-20"
+        } bg-gradient-to-r from-cyan-400 via-purple-500 to-emerald-400 blur-sm`}
+      />
     </div>
   );
 };

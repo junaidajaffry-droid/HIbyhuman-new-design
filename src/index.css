@@ -18,6 +18,99 @@
   animation: pulseGlow 3s ease-in-out infinite;
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+/* Ambient animated page background keyframes */
+@keyframes floatOrb1 {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(60px, -45px) scale(1.1) rotate(120deg);
+  }
+  66% {
+    transform: translate(-40px, 50px) scale(0.95) rotate(240deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1) rotate(360deg);
+  }
+}
+
+@keyframes floatOrb2 {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(-50px, 60px) scale(0.9) rotate(-120deg);
+  }
+  66% {
+    transform: translate(45px, -35px) scale(1.15) rotate(-240deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1) rotate(-360deg);
+  }
+}
+
+@keyframes floatOrb3 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(35px, -60px) scale(1.18);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes auroraWave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float-orb1 {
+  animation: floatOrb1 22s ease-in-out infinite;
+}
+
+.animate-float-orb2 {
+  animation: floatOrb2 26s ease-in-out infinite;
+}
+
+.animate-float-orb3 {
+  animation: floatOrb3 18s ease-in-out infinite;
+}
+
+.animate-aurora {
+  background-size: 200% 200%;
+  animation: auroraWave 16s ease-in-out infinite;
+}
+
 /* Custom smooth scrollbar matching HiByHuman */
 ::-webkit-scrollbar {
   width: 7px;
